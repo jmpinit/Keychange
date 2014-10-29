@@ -9,13 +9,7 @@ void setup() {
 
 unsigned int last = 0;
 void loop() {
-  unsigned int keys = 0;
-  
-  for(int i=0; i < NUM_KEYS; i++) {
-    if(digitalRead(i+2)) {
-      keys |= 1 << i;
-    }
-  }
+  unsigned int keys = readKeys();
   
   if(keys != last) {
     unsigned int diff = keys ^ last;
@@ -34,4 +28,16 @@ void loop() {
     Serial.write(updates & 0xff);
   }
   last = keys;
+}
+
+unsigned int readKeys() {
+  unsigned int keys = 0;
+  
+  for(int i=0; i < NUM_KEYS; i++) {
+    if(digitalRead(i+2)) {
+      keys |= 1 << i;
+    }
+  }
+  
+  return keys;
 }
