@@ -60,7 +60,7 @@ void loop() {
   }
 }
 
-boolean keyPressed(int key) {
+boolean keyPressed(unsigned int key) {
   boolean pressed = false;
   
   static unsigned int last = 0;
@@ -70,14 +70,14 @@ boolean keyPressed(int key) {
     // which keys changed?
     unsigned int diff = keys ^ last;
     
-    if(diff & (1 << key)) {
+    if((diff & (1 << key)) > 0) {
       // the key's state changed
       unsigned long timeNow = millis();
       if(timeNow - bounceTimes[key] > DEBOUNCE) {
         bounceTimes[key] = timeNow;
         // the key is not bouncing
         
-        pressed = keys & (1 << key);
+        pressed = (keys & (1 << key)) > 0;
       }
     }
   }
