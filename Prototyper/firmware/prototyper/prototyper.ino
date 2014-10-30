@@ -1,33 +1,90 @@
-#define NUM_KEYS 5
+#define NUM_KEYS 10
 #define DEBOUNCE 5
+
+#define LED_PIN 13
+
+enum state {
+  LISTEN_STATE,
+  FIRST_KEY_STATE,
+  SECOND_KEY_STATE
+};
+
+enum state theState;
+unsigned char firstKey, secondKey;
+unsigned long firstTime;
 
 unsigned long bounceTimes[NUM_KEYS];
 
 void setup() {
   Serial.begin(115200);
+  theState = LISTEN_STATE;
+  
+  pinMode(LED_PIN, OUTPUT);
+  digitalWrite(LED_PIN, LOW);
 }
 
-unsigned int last = 0;
 void loop() {
+  switch(theState) {
+    case LISTEN_STATE:
+      if(Serial.available() > 0) {
+        unsigned char command = Serial.read();
+        firstKey = command & 0xF;
+        secondKey = command >> 4;
+        
+        if(firstKey < NUM_KEYS && secondKey < NUM_KEYS) {
+          theState = FIRST_KEY_STATE;
+          digitalWrite(LED_PIN, HIGH);
+        }
+      }
+      break;
+    case FIRST_KEY_STATE:
+      if(keyPressed(firstKey)) {
+        firstTime = millis();
+        theState = SECOND_KEY_STATE;
+      }
+      
+      break;
+    case SECOND_KEY_STATE:
+      if(keyPressed(secondKey)) {
+        unsigned long timePassed = millis() - firstTime;
+        
+        unsigned char* timeData = (unsigned char*)(&timePassed);
+        for(int i=sizeof(unsigned long)-1; i >= 0; i--)
+          Serial.write(timeData[i]);
+        
+        theState = LISTEN_STATE;
+        digitalWrite(LED_PIN, LOW);
+      }
+      
+      break;
+  }
+}
+
+boolean keyPressed(int key) {
+  boolean pressed = false;
+  
+  static unsigned int last = 0;
   unsigned int keys = readKeys();
   
   if(keys != last) {
+    // which keys changed?
     unsigned int diff = keys ^ last;
-    unsigned int keybuff = keys;
-    unsigned int updates = 0;
     
-    for(int i=0; diff != 0; i++, diff >>= 1, keybuff >>= 1) {
-      if(diff & 1) {
-        unsigned long timeNow = millis();
-        if(timeNow - bounceTimes[i] > DEBOUNCE) {
-          bounceTimes[i] = timeNow;
-          updates |= (keybuff & 1) << i;
-        }
+    if(diff & (1 << key)) {
+      // the key's state changed
+      unsigned long timeNow = millis();
+      if(timeNow - bounceTimes[key] > DEBOUNCE) {
+        bounceTimes[key] = timeNow;
+        // the key is not bouncing
+        
+        pressed = keys & (1 << key);
       }
     }
-    Serial.write(updates & 0xff);
   }
+  
   last = keys;
+  
+  return pressed;
 }
 
 unsigned int readKeys() {
