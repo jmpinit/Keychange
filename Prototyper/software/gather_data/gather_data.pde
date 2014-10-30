@@ -20,7 +20,7 @@ void setup () {
   dataTable.addColumn("millis");
   
   println(Serial.list());
-  typerPort = new Serial(this, Serial.list()[2], 115200);
+  typerPort = new Serial(this, Serial.list()[1], 115200);
   typerPort.write(0xff);
   
   collectorThread = new Thread(new Runnable() {
@@ -136,8 +136,9 @@ int sampleKeyPair(int firstKey, int secondKey) throws Exception {
   if(firstKey < NUM_KEYS && secondKey < NUM_KEYS) {
     int command = (secondKey << 4) | firstKey;
     
+    typerPort.clear();
     typerPort.write((byte)command);
-    while(typerPort.available() == 0) {}
+    while(typerPort.available() < 4) {}
     
     byte[] data = new byte[4];
     int len = typerPort.readBytes(data);
