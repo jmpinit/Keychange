@@ -1,2 +1,6 @@
 hardware/
 *.properties
+
+# data
+*.csv
+*.png
