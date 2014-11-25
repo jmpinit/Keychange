@@ -4,7 +4,9 @@ import java.awt.event.KeyEvent;
 
 Serial myPort;
 Robot rob;
- 
+
+String symbols = "aeorisn1tl2md0cp3hbuk45g9687yfwjvzxqASERBTMLNPOIDCHGKFJUW.!Y*@V-ZQX_$#,/+?;^ %~=&`\)][:<(æ>\"|{'}"
+
 void setup () {
   size(400, 300);        
   
