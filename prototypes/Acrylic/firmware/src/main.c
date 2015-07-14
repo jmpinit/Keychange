@@ -8,6 +8,7 @@
 
 #define NUM_KEYS 8
 #define DEBOUNCE 10
+#define KEY_F1	 15
 
 unsigned long bounceTimes[NUM_KEYS];
 volatile long millis = 0;
@@ -45,7 +46,7 @@ int main(void) {
                         // the key is not bouncing
 
                         if((keys & (1 << key)) > 0)
-                        uart_tx('a' + key);
+                        uart_tx(KEY_F1 + 1 + key);
                     }
                 }
             }
