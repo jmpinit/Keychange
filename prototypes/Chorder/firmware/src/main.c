@@ -149,7 +149,7 @@ int main(void) {
                     seq_buffer[seq_len++] = chord;
 
                     if (seq_len < MAX_SEQ_LEN) {
-                        int report_i = lookup_report(sequences, seq_buffer, seq_len);
+                        int report_i = lookup_report(sequences, sizeof(sequences), seq_buffer, seq_len);
 
                         if (report_i >= 0) {
                             send_kb_report(&reports[report_i]);
