@@ -1,4 +1,6 @@
 #include <stdint.h>
+
+#include "serial.h"
 #include "kb.h"
 
 void send_kb_report(kb_report_data* data) {

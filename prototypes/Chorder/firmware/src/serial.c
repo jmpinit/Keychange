@@ -20,7 +20,7 @@ void uart_init(unsigned int baudrate) {
     UBRRL = (unsigned char)baudrate;
 
     UCSRA = (1<<U2X);
-    UCSRB = (1<<RXEN)|(2<<RXCIE)|(1<<TXEN);		//enable rx and tx
+    UCSRB = (uint8_t)((1<<RXEN)|(2<<RXCIE)|(1<<TXEN));		//enable rx and tx
     UCSRC = (1<<URSEL)|(1<<USBS)|(3<<UCSZ0);	//8 data bits, 2 stop bits
 
     sei();
@@ -47,7 +47,7 @@ char uart_available(void) {
     return !(write_ptr==read_ptr);
 }
 
-ISR(USART_RX_vect) {
+ISR(USART_RXC_vect) {
     cli();
     uart_write_buff(UDR);
     sei();
