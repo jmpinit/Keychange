@@ -77,42 +77,42 @@ int main(void) {
 
     node seq_single_key = {
         .data = 0x80,
-        .next = (struct node*)&report_a
+        .next = &report_a
     };
 
     node seq_single_chord = {
         .data = 0x3,
-        .next = (struct node*)&report_b
+        .next = &report_b
     };
 
     node seq_arpeggio_3 = {
         .data = 0x10,
-        .next = (struct node*)&report_c
+        .next = &report_c
     };
 
     node seq_arpeggio_2 = {
         .data = 0x01,
-        .next = (struct node*)&seq_arpeggio_3
+        .next = &seq_arpeggio_3
     };
 
     node seq_arpeggio = {
         .data = 0x40,
-        .next = (struct node*)&seq_arpeggio_2
+        .next = &seq_arpeggio_2
     };
 
     node seq_arpeggio_chord_3 = {
         .data = 0x14,
-        .next = (struct node*)&report_d
+        .next = &report_d
     };
 
     node seq_arpeggio_chord_2 = {
         .data = 0x01,
-        .next = (struct node*)&seq_arpeggio_chord_3
+        .next = &seq_arpeggio_chord_3
     };
 
     node seq_arpeggio_chord = {
         .data = 0x40,
-        .next = (struct node*)&seq_arpeggio_chord_2
+        .next = &seq_arpeggio_chord_2
     };
 
     sequences[0] = &seq_single_key;
