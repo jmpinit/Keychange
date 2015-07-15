@@ -6,104 +6,21 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "inc/serial.h"
-
-#define MAX_SEQUENCES   256
-#define MAX_SEQ_LEN     8
+#include "util.h"
+#include "serial.h"
+#include "kb.h"
+#include "keyseq.h"
 
 #define NUM_KEYS        8
 #define DEBOUNCE        10
 #define CHORD_TIMEOUT   10
 
-#define RAW_START   0xFD
-
-#define SEQ_INVALID (-1)
-#define SEQ_PARTIAL (-2)
-
-#define forever for(;;)
-
-typedef struct {
-    uint8_t data; // data is report index if next is NULL, key state otherwise
-    struct node* next;
-} node;
-
-typedef struct {
-    uint8_t modifier;
-    uint8_t scan_1;
-    uint8_t scan_2;
-    uint8_t scan_3;
-    uint8_t scan_4;
-    uint8_t scan_5;
-    uint8_t scan_6;
-} kb_report_data;
-
-
-unsigned long bounceTimes[NUM_KEYS];
 volatile long millis = 0;
 
 node* sequences[256];
 
 uint8_t seq_buffer[8];
 uint8_t seq_len = 0;
-
-void send_kb_report(kb_report_data* data) {
-    uart_tx(RAW_START);
-    uart_tx(9); // length
-    uart_tx(1); // kb descriptor
-    uart_tx(data->modifier);
-    uart_tx(0); // ?? magic
-
-    uart_tx(data->scan_1);
-    uart_tx(data->scan_2);
-    uart_tx(data->scan_3);
-    uart_tx(data->scan_4);
-    uart_tx(data->scan_5);
-    uart_tx(data->scan_6);
-}
-
-int seq_match(node* current, uint8_t* keys, int i, int len) {
-    if (current == NULL) {
-        return SEQ_INVALID;
-    } else if (len == 0) {
-        return SEQ_PARTIAL;
-    } else {
-        if (current->next == NULL) {
-            // must be a report
-            return current->data;
-        } else {
-            if (i < len) {
-                if (keys[i] == current->data) {
-                    // keep descending
-                    return seq_match((node*)current->next, keys, i+1, len);
-                } else {
-                    // typed and stored sequences don't match 
-                    return SEQ_INVALID;
-                }
-            } else {
-                return SEQ_PARTIAL;
-            }
-        }
-    }
-}
-
-int lookup_report(uint8_t* keys, int len) {
-    if (len == 0)
-        return SEQ_PARTIAL;
-    
-    bool partial = false;
-
-    for (int i = 0; i < MAX_SEQUENCES; i++) {
-        int res = seq_match(sequences[i], keys, 0, len);
-
-        if (res >= 0) {
-            return res;
-        } else if (res == SEQ_PARTIAL) {
-            partial = true;
-        }
-    }
-
-    return partial? SEQ_PARTIAL : SEQ_INVALID;
-}
 
 void reset_lookup() {
     for (int i = 0; i < MAX_SEQ_LEN; i++)
@@ -232,7 +149,7 @@ int main(void) {
                     seq_buffer[seq_len++] = chord;
 
                     if (seq_len < MAX_SEQ_LEN) {
-                        int report_i = lookup_report(seq_buffer, seq_len);
+                        int report_i = lookup_report(sequences, seq_buffer, seq_len);
 
                         if (report_i >= 0) {
                             send_kb_report(&reports[report_i]);

@@ -15,6 +15,8 @@ OUT := $(OBJDIR)$(S)$(NAME).out
 MAP := $(OBJDIR)$(S)$(NAME).map
 
 SOURCES =	main.c \
+		kb.c \
+		keyseq.c \
 		serial.c
 
 #HEADERS := src/inc/$(wildcard *.h)
@@ -38,6 +40,9 @@ ifeq ($(OS),Windows_NT)
 else
 	rm $(HEX) $(OUT) $(MAP) $(OBJECTS)
 endif
+
+test: src/tests/test_keyseq.c
+	gcc -std=c99 -Isrc/inc -o test src/tests/test_keyseq.c
 
 flash: $(HEX)
 	sudo avrdude -y -c usbtiny -p $(MCU_AVRDUDE) -U flash:w:$(HEX)
