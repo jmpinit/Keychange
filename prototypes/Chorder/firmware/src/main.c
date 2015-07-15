@@ -26,11 +26,50 @@ void reset_lookup() {
     for (int i = 0; i < MAX_SEQ_LEN; i++)
         seq_buffer[i] = 0;
     seq_len = 0;
+    uart_tx_str("RESET\r\n"); // FIXME
 }
 
 ISR(TIMER1_COMPA_vect) {
     millis++;
     TCNT1 = 0;
+}
+
+void mode_spp() {
+    uart_tx_str("$$$");
+    _delay_ms(50);
+    uart_tx_str("S~,0\n");
+    _delay_ms(50);
+    uart_tx_str("R,1\n");
+    _delay_ms(100);
+}
+
+void mode_hid() {
+    uart_tx_str("$$$");
+    _delay_ms(50);
+    uart_tx_str("S~,0\n");
+    _delay_ms(50);
+    uart_tx_str("R,1\n");
+    _delay_ms(100);
+}
+
+void debug_mode() {
+    mode_spp();
+
+    forever {
+        uint8_t keys = PINC;
+        
+        for (int bit = 0; bit < 8; bit++) {
+            if (keys & (0x80 >> bit)) {
+                uart_tx('X');
+            } else {
+                uart_tx('_');
+            }
+        }
+
+        uart_tx_str("\r\n");
+
+        _delay_ms(500);
+    }
 }
 
 int main(void) {
@@ -42,14 +81,6 @@ int main(void) {
     TCCR1B |= (1 << CS12) | (1 << CS10); // prescale 1024 
     TIMSK |= 1 << OCIE1A; // compare interrupt
     sei();
-
-    // into HID mode
-    /*uart_tx_str("$$$");
-    _delay_ms(50);
-    uart_tx_str("S~,0\n");
-    _delay_ms(50);
-    uart_tx_str("R,1\n");
-    _delay_ms(500);*/
 
     kb_report_data release = { .scan_1 = 0 };
     kb_report_data letter_a = { .scan_1 = 4 };
@@ -120,6 +151,8 @@ int main(void) {
     sequences[2] = &seq_arpeggio;
     sequences[3] = &seq_arpeggio_chord;
 
+    mode_spp();
+
     _delay_ms(50);
 
     forever {
@@ -127,8 +160,8 @@ int main(void) {
         static unsigned long time_evt_start = 0;
         static unsigned int last = 0;
         static uint8_t chord = 0; // accumulates keypresses
-        uint8_t keys = PINC;
 
+        uint8_t keys = PINC;
 
         if (keys != last) {
             unsigned long time_now = millis;
@@ -144,6 +177,7 @@ int main(void) {
             } else {
                 if (chord == 0x55) {
                     // special cancel chord
+                    uart_tx_str("cancel\r\n");
                     reset_lookup();
                 } else if (chord != 0) {
                     seq_buffer[seq_len++] = chord;
@@ -152,16 +186,20 @@ int main(void) {
                         int report_i = lookup_report(sequences, sizeof(sequences), seq_buffer, seq_len);
 
                         if (report_i >= 0) {
-                            send_kb_report(&reports[report_i]);
-                            _delay_ms(50);
-                            send_kb_report(&release);
+                            //send_kb_report(&reports[report_i]);
+                            //_delay_ms(50);
+                            //send_kb_report(&release);
+                            uart_tx('0'+report_i);
+                            uart_tx_str("\r\n");
+
                             reset_lookup();
                         } else if (report_i == SEQ_INVALID) {
-                            uart_tx('z');
+                            uart_tx_str("invalid\r\n");
                             reset_lookup();
                         } 
                     } else {
                         // sequence is too long, reset
+                        uart_tx_str("too long\r\n"); // FIXME
                         reset_lookup();
                     }
                 }
