@@ -1,5 +1,5 @@
-#ifndef SERIAL
-#define SERIAL
+#ifndef H_SERIAL
+#define H_SERIAL
 
 void uart_init(unsigned int baudrate);
 void uart_tx(unsigned char c);
